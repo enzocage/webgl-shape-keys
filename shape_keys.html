@@ -1,0 +1,104 @@
+<html>
+
+<head>
+
+<title>Shape Keys</title>
+
+<script type="text/javascript" src="./other/gl-matrix-min.js"></script>
+<script type="text/javascript" src="./other/webgl-utils.js"></script>
+<script type="text/javascript" src="./webgl-helper.js"></script>
+
+<script type="text/javascript">
+
+function startPage() {
+	var canvas = document.getElementById("main-canvas");
+	var gl = initGL(canvas);
+	
+	initShaders(gl);
+	initBuffers(gl);
+	
+	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.enable(gl.DEPTH_TEST);
+	
+	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+	
+	gl.pMatrix = mat4.create();
+	mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, gl.pMatrix);
+	
+	startAnimation(gl, tick);
+}
+
+function initShaders(gl) {
+	attributeNames = ["aPosition", "aNormal"];
+	uniformNames = ["uMVMatrix", "uPMatrix", "uNMatrix"];
+	
+	gl.shaderProg = createShaderProgram(gl, "shape_keys.vert", "shape_keys.frag", attributeNames, uniformNames);
+	
+	gl.useProgram(gl.shaderProg);
+
+	for (a in gl.shaderProg.attributes) {
+		var attribLoc = gl.shaderProg.attributes[a]
+		gl.enableVertexAttribArray(attribLoc);
+	}
+}
+
+function initBuffers(gl) {
+	var cube = JSON.parse(syncGET("models/Cube.js"));
+	
+	//gl.vertBuffer has both the vertices and the vertex normals
+	gl.vertBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, gl.vertBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.shapeKeys[1]), gl.STATIC_DRAW);
+	
+	gl.indexBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.indexBuffer);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cube.indices), gl.STATIC_DRAW);
+	
+	gl.indexLength = cube.indices.length;
+}
+
+function tick(gl, timing) {
+	draw(gl);
+	
+	var fpsDiv = document.getElementById("fps");
+	
+	if(fpsDiv.innerHTML != timing.fps)
+		fpsDiv.innerHTML = timing.fps;
+}
+
+function draw(gl) {
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	
+	var mvMatrix = mat4.create();
+
+	mat4.identity(mvMatrix);
+	mat4.translate(mvMatrix, [0.0, 0.0, -10.0]);
+	mat4.rotate(mvMatrix, Math.PI/4, [0, 1, 0]);
+	
+	var nMatrix = mat3.create();
+	mat4.toInverseMat3(mvMatrix, nMatrix);
+	mat3.transpose(nMatrix);
+	
+	//Bind attributes and uniforms 
+	gl.bindBuffer(gl.ARRAY_BUFFER, gl.vertBuffer);
+	gl.vertexAttribPointer(gl.shaderProg.attributes["aPosition"], 3, gl.FLOAT, false, 24, 0);
+	gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"], 3, gl.FLOAT, false, 24, 12);
+	
+	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
+	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uMVMatrix"], false, mvMatrix);
+	gl.uniformMatrix3fv(gl.shaderProg.uniforms["uNMatrix"], false, nMatrix);
+	
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.indexBuffer);
+	gl.drawElements(gl.TRIANGLES, gl.indexLength, gl.UNSIGNED_SHORT, 0);
+}
+
+</script>
+
+</head>
+
+<body onLoad="startPage();">
+	<canvas id="main-canvas" width="1024" height="768"></canvas>
+	<div><span>FPS: </span><span id="fps"></span></div>
+</body>
+
+</html>
