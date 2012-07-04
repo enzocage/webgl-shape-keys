@@ -126,3 +126,7 @@ function startAnimation(gl, callback) {
         lastFrameTime = time;
     }
 }
+
+function degToRadian(degree) {
+	return (degree/180.0)*Math.PI;
+}

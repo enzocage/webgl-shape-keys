@@ -7,6 +7,7 @@
 <script type="text/javascript" src="./other/gl-matrix-min.js"></script>
 <script type="text/javascript" src="./other/webgl-utils.js"></script>
 <script type="text/javascript" src="./webgl-helper.js"></script>
+<script type="text/javascript" src="./camera.js"></script>
 
 <script type="text/javascript">
 
@@ -19,11 +20,12 @@ function startPage() {
 	
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.enable(gl.DEPTH_TEST);
-	
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	
 	gl.pMatrix = mat4.create();
 	mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, gl.pMatrix);
+	
+	gl.camera = new Camera();
 	
 	startAnimation(gl, tick);
 }
@@ -58,7 +60,7 @@ function initBuffers(gl) {
 }
 
 function tick(gl, timing) {
-	draw(gl);
+	draw(gl, timing);
 	
 	var fpsDiv = document.getElementById("fps");
 	
@@ -66,14 +68,18 @@ function tick(gl, timing) {
 		fpsDiv.innerHTML = timing.fps;
 }
 
-function draw(gl) {
+function draw(gl, timing) {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	
 	var mvMatrix = mat4.create();
 
 	mat4.identity(mvMatrix);
-	mat4.translate(mvMatrix, [0.0, 0.0, -10.0]);
-	mat4.rotate(mvMatrix, Math.PI/4, [0, 1, 0]);
+	//mat4.translate(mvMatrix, [0.0, 0.0, -10.0]);
+	//mat4.rotate(mvMatrix, Math.PI/4, [0, 1, 0]);
+	
+	gl.camera.update(timing);
+	var cMatrix = gl.camera.getViewMatrix();
+	mat4.multiply(cMatrix, mvMatrix, mvMatrix);
 	
 	var nMatrix = mat3.create();
 	mat4.toInverseMat3(mvMatrix, nMatrix);
