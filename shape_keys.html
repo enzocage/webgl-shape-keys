@@ -45,7 +45,7 @@ function initShaders(gl) {
 }
 
 function initBuffers(gl) {
-	var cube = JSON.parse(syncGET("models/Cube.js"));
+	var cube = JSON.parse(syncGET("models/female_body_basemesh.js"));
 	
 	//gl.vertBuffer has both the vertices and the vertex normals
 	gl.vertBuffer = gl.createBuffer();
@@ -74,8 +74,8 @@ function draw(gl, timing) {
 	var mvMatrix = mat4.create();
 
 	mat4.identity(mvMatrix);
-	//mat4.translate(mvMatrix, [0.0, 0.0, -10.0]);
-	//mat4.rotate(mvMatrix, Math.PI/4, [0, 1, 0]);
+	mat4.rotateX(mvMatrix, degToRadian(-90));
+	mat4.translate(mvMatrix, [0.0, 0.0, -1.05]);
 	
 	gl.camera.update(timing);
 	var cMatrix = gl.camera.getViewMatrix();
