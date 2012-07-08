@@ -98,7 +98,7 @@ function draw(gl, timing) {
 	
 	//Blink
 	if(timing.currentTime < blinkEnd) {
-		var blinkWeight = (blinkEnd-timing.currentTime)/500.0;
+		var blinkWeight = (blinkEnd-timing.currentTime)/350.0;
 		
 		if(blinkWeight > 1.0) {
 			blinkWeight = 2.0 - blinkWeight;
@@ -107,15 +107,15 @@ function draw(gl, timing) {
 		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], blinkWeight);
 	}
 	
-	//Smile
-	if(timing.currentTime < smileEnd) {
-		var smileWeight = (smileEnd-timing.currentTime)/500.0;
+	//Puff Cheeks
+	if(timing.currentTime < puffEnd) {
+		var puffWeight = (puffEnd-timing.currentTime)/500.0;
 		
-		if(smileWeight > 1.0) {
-			smileWeight = 2.0 - smileWeight;
+		if(puffWeight > 1.0) {
+			puffWeight = 2.0 - puffWeight;
 		}
 		
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], smileWeight);
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], puffWeight);
 	}
 	
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
@@ -128,12 +128,12 @@ function draw(gl, timing) {
 
 var blinkEnd = new Date().getTime();
 function blinkClicked() {
-	blinkEnd = new Date().getTime()+1000;
+	blinkEnd = new Date().getTime()+700;
 }
 
-var smileEnd = new Date().getTime();
-function smileClicked() {
-	smileEnd = new Date().getTime()+1000;
+var puffEnd = new Date().getTime();
+function puffClicked() {
+	puffEnd = new Date().getTime()+1000;
 }
 
 </script>
@@ -145,7 +145,7 @@ function smileClicked() {
 	<div>
 		<span>FPS: </span><span id="fps"></span>
 		<button onClick="blinkClicked();">Blink!</button>
-		<button onClick="smileClicked();">Smile!</button>
+		<button onClick="puffClicked();">Puff Cheeks!</button>
 	</div>
 </body>
 
