@@ -111,7 +111,8 @@ function startAnimation(gl, callback) {
         var timing = {
             fps: fps,
             totalTime: time-startTime,
-            frameTime: time-lastFrameTime
+            frameTime: time-lastFrameTime,
+            currentTime: time
         }
         
         callback(gl, timing);

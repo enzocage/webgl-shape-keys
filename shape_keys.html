@@ -96,8 +96,27 @@ function draw(gl, timing) {
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
 	}
 	
-	gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.5);
-	gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], 0.5);
+	//Blink
+	if(timing.currentTime < blinkEnd) {
+		var blinkWeight = (blinkEnd-timing.currentTime)/500.0;
+		
+		if(blinkWeight > 1.0) {
+			blinkWeight = 2.0 - blinkWeight;
+		}
+		
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], blinkWeight);
+	}
+	
+	//Smile
+	if(timing.currentTime < smileEnd) {
+		var smileWeight = (smileEnd-timing.currentTime)/500.0;
+		
+		if(smileWeight > 1.0) {
+			smileWeight = 2.0 - smileWeight;
+		}
+		
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], smileWeight);
+	}
 	
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uMVMatrix"], false, mvMatrix);
@@ -107,13 +126,27 @@ function draw(gl, timing) {
 	gl.drawElements(gl.TRIANGLES, gl.indexLength, gl.UNSIGNED_SHORT, 0);
 }
 
+var blinkEnd = new Date().getTime();
+function blinkClicked() {
+	blinkEnd = new Date().getTime()+1000;
+}
+
+var smileEnd = new Date().getTime();
+function smileClicked() {
+	smileEnd = new Date().getTime()+1000;
+}
+
 </script>
 
 </head>
 
 <body onLoad="startPage();">
 	<canvas id="main-canvas" width="1024" height="768"></canvas>
-	<div><span>FPS: </span><span id="fps"></span></div>
+	<div>
+		<span>FPS: </span><span id="fps"></span>
+		<button onClick="blinkClicked();">Blink!</button>
+		<button onClick="smileClicked();">Smile!</button>
+	</div>
 </body>
 
 </html>
