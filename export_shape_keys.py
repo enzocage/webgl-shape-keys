@@ -27,9 +27,11 @@ scene = bpy.context.scene
 for object in bpy.data.objects:
     if object.type == 'MESH' and object.data.shape_keys is not None:
         
+        mesh = object.to_mesh(scene, True, 'RENDER')    
+        
         mainTexture = None
-        if(len(object.data.uv_textures) > 0):
-            mainTexture = object.data.uv_textures.active
+        if(len(mesh.tessface_uv_textures) > 0):
+            mainTexture = mesh.tessface_uv_textures.active
         
         
         shapeKeyNameToIndex = {}
@@ -53,9 +55,7 @@ for object in bpy.data.objects:
                 relativeKeys += ", " + relativeKey
         
         relativeKeys += " ]"
-        
-        
-        mesh = object.to_mesh(scene, True, 'RENDER')        
+            
 
         indices = "[ "
         
@@ -63,7 +63,7 @@ for object in bpy.data.objects:
         
         firstValue = True
         
-        for fIndex, f in enumerate(mesh.faces):
+        for fIndex, f in enumerate(mesh.tessfaces):
             
             if mainTexture is not None:
             
