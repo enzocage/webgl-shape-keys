@@ -31,8 +31,8 @@ function startPage() {
 }
 
 function initShaders(gl) {
-	attributeNames = ["aPosition", "aNormal"];
-	uniformNames = ["uMVMatrix", "uPMatrix", "uNMatrix"];
+	attributeNames = ["aPosition0", "aNormal0", "aPosition1", "aNormal1", "aPosition2", "aNormal2" ];
+	uniformNames = ["uWeight1", "uWeight2","uMVMatrix", "uPMatrix", "uNMatrix"];
 	
 	gl.shaderProg = createShaderProgram(gl, "shape_keys.vert", "shape_keys.frag", attributeNames, uniformNames);
 	
@@ -48,9 +48,13 @@ function initBuffers(gl) {
 	var cube = JSON.parse(syncGET("models/female_body_basemesh.js"));
 	
 	//gl.vertBuffer has both the vertices and the vertex normals
-	gl.vertBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, gl.vertBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.shapeKeys[1]), gl.STATIC_DRAW);
+	gl.shapeKeyBuffers = [];
+
+	for(i = 0; i < cube.shapeKeys.length; i++) {
+		gl.shapeKeyBuffers[i] = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, gl.shapeKeyBuffers[i]);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.shapeKeys[i]), gl.STATIC_DRAW);
+	}
 	
 	gl.indexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.indexBuffer);
@@ -86,9 +90,14 @@ function draw(gl, timing) {
 	mat3.transpose(nMatrix);
 	
 	//Bind attributes and uniforms 
-	gl.bindBuffer(gl.ARRAY_BUFFER, gl.vertBuffer);
-	gl.vertexAttribPointer(gl.shaderProg.attributes["aPosition"], 3, gl.FLOAT, false, 24, 0);
-	gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"], 3, gl.FLOAT, false, 24, 12);
+	for(i = 0; i < gl.shapeKeyBuffers.length; i++) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, gl.shapeKeyBuffers[i]);
+		gl.vertexAttribPointer(gl.shaderProg.attributes["aPosition"+i], 3, gl.FLOAT, false, 24, 0);
+		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
+	}
+	
+	gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.5);
+	gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], 0.5);
 	
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uMVMatrix"], false, mvMatrix);
