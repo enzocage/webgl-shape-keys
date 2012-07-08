@@ -20,7 +20,7 @@ outputTemplate = """\
     ]
 }"""
 
-OUTPUT_DIRECTORY = "/home/anton/Documents/blender_shape_keys/"
+OUTPUT_DIRECTORY = "/home/anton/Desktop/"
 
 scene = bpy.context.scene
 
@@ -65,24 +65,35 @@ for object in bpy.data.objects:
         
         for fIndex, f in enumerate(mesh.faces):
             
-            for vIndex, v in enumerate(f.vertices):
-                textureCoord = ""
+            if mainTexture is not None:
+            
+                allTextureCoords = []
                 
-                if mainTexture is not None:
-                    textureCoord = getTextureCoords(mainTexture, fIndex, vIndex)
+                for vIndex, v in enumerate(f.vertices):
+                    allTextureCoords.append(getTextureCoords(mainTexture, fIndex, vIndex))
+                        
+                vertexTextureCoords = allTextureCoords[0] + ", " + allTextureCoords[1] + ", " + allTextureCoords[2]
+                
+                if len(f.vertices) == 4:
+                    vertexTextureCoords += ", " + allTextureCoords[0] + ", " + allTextureCoords[2] + ", " + allTextureCoords[3]
                 
                 if firstValue:
-                    indices += str(v)
-                    
-                    if mainTexture is not None:
-                        textureCoords += textureCoord
-                        
-                    firstValue = False
+                    textureCoords += vertexTextureCoords
                 else:
-                    indices += ", " + str(v)
+                    textureCoords += ", " + vertexTextureCoords
+            
+            
+            vertexIndices = str(f.vertices[0]) + ", " + str(f.vertices[1]) + ", " + str(f.vertices[2])
+            
+            if len(f.vertices) == 4:
+                vertexIndices += ", " + str(f.vertices[0]) + ", " + str(f.vertices[2]) + ", " + str(f.vertices[3])
+            
+            if firstValue:
+                indices += vertexIndices
                     
-                    if mainTexture is not None:
-                        textureCoords += ", " + textureCoord
+                firstValue = False
+            else:
+                indices += ", " + vertexIndices
             
         indices += " ]"
         
