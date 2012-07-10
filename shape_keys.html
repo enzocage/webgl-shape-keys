@@ -16,6 +16,7 @@ function startPage() {
 	var gl = initGL(canvas);
 	
 	initShaders(gl);
+	initTextures(gl);
 	initBuffers(gl);
 	
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -31,8 +32,8 @@ function startPage() {
 }
 
 function initShaders(gl) {
-	attributeNames = ["aPosition0", "aNormal0", "aPosition1", "aNormal1", "aPosition2", "aNormal2" ];
-	uniformNames = ["uWeight1", "uWeight2","uMVMatrix", "uPMatrix", "uNMatrix"];
+	attributeNames = ["aTextureCoord","aPosition0", "aNormal0", "aPosition1", "aNormal1", "aPosition2", "aNormal2" ];
+	uniformNames = ["uWeight1", "uWeight2","uMVMatrix", "uPMatrix", "uNMatrix", "uSampler"];
 	
 	gl.shaderProg = createShaderProgram(gl, "shape_keys.vert", "shape_keys.frag", attributeNames, uniformNames);
 	
@@ -42,19 +43,31 @@ function initShaders(gl) {
 		var attribLoc = gl.shaderProg.attributes[a]
 		gl.enableVertexAttribArray(attribLoc);
 	}
+	
+	gl.disableVertexAttribArray(gl.shaderProg.attributes["aPosition2"]);
+	gl.disableVertexAttribArray(gl.shaderProg.attributes["aNormal2"]);
+}
+
+function initTextures(gl) {
+	gl.mainTexture = createTexture(gl, "images/Characterxa_Texa.png");
 }
 
 function initBuffers(gl) {
-	var cube = JSON.parse(syncGET("models/female_body_basemesh.js"));
+	var cube = JSON.parse(syncGET("models/main3.js"));
 	
 	//gl.vertBuffer has both the vertices and the vertex normals
 	gl.shapeKeyBuffers = [];
 
-	for(i = 0; i < cube.shapeKeys.length; i++) {
+	for(i = 0; i < 2; i++) {
 		gl.shapeKeyBuffers[i] = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, gl.shapeKeyBuffers[i]);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.shapeKeys[i]), gl.STATIC_DRAW);
 	}
+	
+	//Texture buffers
+	gl.mainTextureBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, gl.mainTextureBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.textureCoords), gl.STATIC_DRAW);
 	
 	gl.indexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.indexBuffer);
@@ -89,8 +102,11 @@ function draw(gl, timing) {
 	mat4.toInverseMat3(mvMatrix, nMatrix);
 	mat3.transpose(nMatrix);
 	
+	gl.bindBuffer(gl.ARRAY_BUFFER, gl.mainTextureBuffer);
+	gl.vertexAttribPointer(gl.shaderProg.attributes["aTextureCoord"], 2, gl.FLOAT, false, 0, 0);
+	
 	//Bind attributes and uniforms 
-	for(i = 0; i < gl.shapeKeyBuffers.length; i++) {
+	for(i = 0; i < 2; i++) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, gl.shapeKeyBuffers[i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aPosition"+i], 3, gl.FLOAT, false, 24, 0);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
@@ -121,6 +137,10 @@ function draw(gl, timing) {
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uMVMatrix"], false, mvMatrix);
 	gl.uniformMatrix3fv(gl.shaderProg.uniforms["uNMatrix"], false, nMatrix);
+	
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_2D, gl.mainTexture);
+	gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
 	
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.indexBuffer);
 	gl.drawElements(gl.TRIANGLES, gl.indexLength, gl.UNSIGNED_SHORT, 0);
