@@ -18,7 +18,6 @@ def getTextureCoordsByVertex(mesh, texture, vIndex):
 
 outputTemplate = """\
 {
-    "indices"  : %(indices)s,
     "textureCoords" : %(textureCoords)s,
     "relativeKeys" : %(relativeKeys)s,
     "shapeKeys"  : [
@@ -42,12 +41,13 @@ for object in bpy.data.objects:
         if(len(mesh.tessface_uv_textures) > 0):
             mainTexture = mesh.tessface_uv_textures.active
             
-            for vIndex, v in enumerate(mesh.vertices):
-                if firstValue:
-                    textureCoords += getTextureCoordsByVertex(mesh, mainTexture, vIndex)
-                    firstValue = False
-                else:
-                    textureCoords += ", " + getTextureCoordsByVertex(mesh, mainTexture, vIndex)
+            for fIndex, f in enumerate(mesh.tessfaces):
+                for vInFIndex, vIndex in enumerate(f.vertices):
+                    if firstValue:
+                        textureCoords += getTextureCoords(mainTexture, fIndex, vInFIndex)
+                        firstValue = False
+                    else:
+                        textureCoords += ", " + getTextureCoords(mainTexture, fIndex, vInFIndex)
         
         textureCoords += " ]"
         
@@ -73,26 +73,6 @@ for object in bpy.data.objects:
                 relativeKeys += ", " + relativeKey
         
         relativeKeys += " ]"
-            
-
-        indices = "[ "
-        
-        firstValue = True
-        
-        for fIndex, f in enumerate(mesh.tessfaces):
-            vertexIndices = str(f.vertices[0]) + ", " + str(f.vertices[1]) + ", " + str(f.vertices[2])
-            
-            if len(f.vertices) == 4:
-                vertexIndices += ", " + str(f.vertices[0]) + ", " + str(f.vertices[2]) + ", " + str(f.vertices[3])
-            
-            if firstValue:
-                indices += vertexIndices
-                    
-                firstValue = False
-            else:
-                indices += ", " + vertexIndices
-            
-        indices += " ]"
         
             
         shapeKeysText = ""
@@ -109,21 +89,23 @@ for object in bpy.data.objects:
 
             mesh = object.to_mesh(scene, True, 'RENDER')
             
-            for vertexIndex, v in enumerate(mesh.vertices):
-                
-                allVertexText = str(round(v.co.x, 6))
-                allVertexText += ", " + str(round(v.co.y, 6))
-                allVertexText += ", " + str(round(v.co.z, 6))
-                allVertexText += ", " + str(round(v.normal.x, 6))
-                allVertexText += ", " + str(round(v.normal.y, 6))
-                allVertexText += ", " + str(round(v.normal.z, 6))
-                
-                if firstValue:
-                    vertices += allVertexText
-                    firstValue = False
-                else:
-                    vertices += ", " + allVertexText
-                
+            for fIndex, f in enumerate(mesh.tessfaces):
+                for vInFIndex, vIndex in enumerate(f.vertices):
+                    v = mesh.vertices[vIndex]
+                    
+                    allVertexText = str(round(v.co.x, 6))
+                    allVertexText += ", " + str(round(v.co.y, 6))
+                    allVertexText += ", " + str(round(v.co.z, 6))
+                    allVertexText += ", " + str(round(v.normal.x, 6))
+                    allVertexText += ", " + str(round(v.normal.y, 6))
+                    allVertexText += ", " + str(round(v.normal.z, 6))
+                    
+                    if firstValue:
+                        vertices += allVertexText
+                        firstValue = False
+                    else:
+                        vertices += ", " + allVertexText
+
             block.value = 0.0
         
             vertices += " ]"
@@ -138,7 +120,6 @@ for object in bpy.data.objects:
         
         #Generate Final Output Text    
         parameters = {
-            "indices" : indices,
             "textureCoords" : textureCoords,
             "relativeKeys": relativeKeys,
             "shapeKeys" : shapeKeysText
