@@ -53,7 +53,9 @@ function initTextures(gl) {
 }
 
 function initBuffers(gl) {
-	var cube = JSON.parse(syncGET("models/main3.js"));
+	var cube = JSON.parse(syncGET("models/main.js"));
+	
+	gl.faceCount = cube.faceCount;
 	
 	//gl.vertBuffer has both the vertices and the vertex normals
 	gl.shapeKeyBuffers = [];
@@ -68,12 +70,6 @@ function initBuffers(gl) {
 	gl.mainTextureBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, gl.mainTextureBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.textureCoords), gl.STATIC_DRAW);
-	
-	gl.indexBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.indexBuffer);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cube.indices), gl.STATIC_DRAW);
-	
-	gl.indexLength = cube.indices.length;
 }
 
 function tick(gl, timing) {
@@ -142,8 +138,7 @@ function draw(gl, timing) {
 	gl.bindTexture(gl.TEXTURE_2D, gl.mainTexture);
 	gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
 	
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.indexBuffer);
-	gl.drawElements(gl.TRIANGLES, gl.indexLength, gl.UNSIGNED_SHORT, 0);
+	gl.drawArrays(gl.TRIANGLES, 0, gl.faceCount);
 }
 
 var blinkEnd = new Date().getTime();

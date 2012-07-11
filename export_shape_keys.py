@@ -13,11 +13,21 @@ def getTextureCoordsByVertex(mesh, texture, vIndex):
 				return getTextureCoords(texture, fIndex, vInFIndex)
 	return "0.0, 0.0";
 
+def vertexToStr(v):
+    ret = str(round(v.co.x, 6))
+    ret += ", " + str(round(v.co.y, 6))
+    ret += ", " + str(round(v.co.z, 6))
+    ret += ", " + str(round(v.normal.x, 6))
+    ret += ", " + str(round(v.normal.y, 6))
+    ret += ", " + str(round(v.normal.z, 6))
+    return ret
+
 
 # Main Code 
 
 outputTemplate = """\
 {
+    "faceCount" : %(faceCount)s,
     "textureCoords" : %(textureCoords)s,
     "relativeKeys" : %(relativeKeys)s,
     "shapeKeys"  : [
@@ -42,12 +52,20 @@ for object in bpy.data.objects:
             mainTexture = mesh.tessface_uv_textures.active
             
             for fIndex, f in enumerate(mesh.tessfaces):
+                allTextureCoords = []
                 for vInFIndex, vIndex in enumerate(f.vertices):
-                    if firstValue:
-                        textureCoords += getTextureCoords(mainTexture, fIndex, vInFIndex)
-                        firstValue = False
-                    else:
-                        textureCoords += ", " + getTextureCoords(mainTexture, fIndex, vInFIndex)
+                    allTextureCoords.append(getTextureCoords(mainTexture, fIndex, vInFIndex))
+                
+                textureStr = allTextureCoords[0] + ", " + allTextureCoords[1] + ", " + allTextureCoords[2]
+                
+                if len(f.vertices) == 4:
+                    textureStr += ", " + allTextureCoords[0] + ", " + allTextureCoords[2] + ", " + allTextureCoords[3]
+                
+                if firstValue:
+                    textureCoords += textureStr
+                    firstValue = False
+                else:
+                    textureCoords += ", " + textureStr
         
         textureCoords += " ]"
         
@@ -74,6 +92,8 @@ for object in bpy.data.objects:
         
         relativeKeys += " ]"
         
+        
+        faceCount = 0
             
         shapeKeysText = ""
         
@@ -90,21 +110,27 @@ for object in bpy.data.objects:
             mesh = object.to_mesh(scene, True, 'RENDER')
             
             for fIndex, f in enumerate(mesh.tessfaces):
+                allVertices = []
                 for vInFIndex, vIndex in enumerate(f.vertices):
                     v = mesh.vertices[vIndex]
+                    allVertices.append(vertexToStr(v))
                     
-                    allVertexText = str(round(v.co.x, 6))
-                    allVertexText += ", " + str(round(v.co.y, 6))
-                    allVertexText += ", " + str(round(v.co.z, 6))
-                    allVertexText += ", " + str(round(v.normal.x, 6))
-                    allVertexText += ", " + str(round(v.normal.y, 6))
-                    allVertexText += ", " + str(round(v.normal.z, 6))
+                allVertexText = allVertices[0] + ", " + allVertices[1] + ", " + allVertices[2]
+                
+                if firstShapeKey:
+                    faceCount += 3
+                
+                if len(f.vertices) == 4:
+                    allVertexText += ", " + allVertices[0] + ", " + allVertices[2] + ", " + allVertices[3]
                     
-                    if firstValue:
-                        vertices += allVertexText
-                        firstValue = False
-                    else:
-                        vertices += ", " + allVertexText
+                    if firstShapeKey:
+                        faceCount += 3
+                
+                if firstValue:
+                    vertices += allVertexText
+                    firstValue = False
+                else:
+                    vertices += ", " + allVertexText
 
             block.value = 0.0
         
@@ -120,6 +146,7 @@ for object in bpy.data.objects:
         
         #Generate Final Output Text    
         parameters = {
+            "faceCount" : str(faceCount),
             "textureCoords" : textureCoords,
             "relativeKeys": relativeKeys,
             "shapeKeys" : shapeKeysText
