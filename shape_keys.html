@@ -16,7 +16,6 @@ function startPage() {
 	var gl = initGL(canvas);
 	
 	initShaders(gl);
-	initTextures(gl);
 	initBuffers(gl);
 	
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -46,10 +45,6 @@ function initShaders(gl) {
 	
 	gl.disableVertexAttribArray(gl.shaderProg.attributes["aPosition2"]);
 	gl.disableVertexAttribArray(gl.shaderProg.attributes["aNormal2"]);
-}
-
-function initTextures(gl) {
-	gl.mainTexture = createTexture(gl, "images/Characterxa_Texa.png");
 }
 
 function initBuffers(gl) {
