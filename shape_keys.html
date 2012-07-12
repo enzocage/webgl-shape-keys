@@ -94,11 +94,6 @@ function draw(gl, timing) {
 
 function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	//Bind attributes
-	if(model.textureBuffer) { 
-		gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
-		gl.vertexAttribPointer(gl.shaderProg.attributes["aTextureCoord"], 2, gl.FLOAT, false, 0, 0);
-	}
-	
 	var count = Math.min(model.relativeKeys.length, 2);	//We can blend together at most 2 shape keys
 	
 	for(i = 0; i < count; i++) {
@@ -116,9 +111,14 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	gl.uniformMatrix3fv(gl.shaderProg.uniforms["uNMatrix"], false, nMatrix);
 	
 	//Textures
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, gl.textures[model.textureIndex]);
-	gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
+	if("textureIndex" in model) { 
+		gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
+		gl.vertexAttribPointer(gl.shaderProg.attributes["aTextureCoord"], 2, gl.FLOAT, false, 0, 0);
+		
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, gl.textures[model.textureIndex]);
+		gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
+	}
 	
 	gl.drawArrays(gl.TRIANGLES, 0, model.faceCount);
 }
