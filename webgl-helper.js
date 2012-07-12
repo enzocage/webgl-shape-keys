@@ -157,6 +157,8 @@ function createModel(gl, url, models) {
 				model.textureBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelJSON.textureCoords), gl.STATIC_DRAW);
+			} else {
+				model.diffuseColor = modelJSON.diffuseColor;
 			}
 			
 			models.push(model);

@@ -14,8 +14,9 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 uniform mat3 uNMatrix;
 
-varying vec3 vNormal;
+uniform bool uUseTexture;
 
+varying vec3 vNormal;
 varying vec2 vTextureCoord;
 
 void main(void) {
@@ -33,5 +34,8 @@ void main(void) {
 	
 	gl_Position = uPMatrix * uMVMatrix * vec4(position, 1.0);
 	vNormal = uNMatrix * normalVec;
-	vTextureCoord = aTextureCoord;
+	
+	if(uUseTexture) {
+		vTextureCoord = aTextureCoord;
+	}
 }

@@ -32,7 +32,7 @@ function startPage() {
 
 function initShaders(gl) {
 	attributeNames = ["aTextureCoord","aPosition0", "aNormal0", "aPosition1", "aNormal1", "aPosition2", "aNormal2" ];
-	uniformNames = ["uWeight1", "uWeight2","uMVMatrix", "uPMatrix", "uNMatrix", "uSampler"];
+	uniformNames = ["uWeight1", "uWeight2","uMVMatrix", "uPMatrix", "uNMatrix", "uDiffuseColor", "uUseTexture", "uSampler"];
 	
 	gl.shaderProg = createShaderProgram(gl, "shape_keys.vert", "shape_keys.frag", attributeNames, uniformNames);
 	
@@ -51,6 +51,14 @@ function initBuffers(gl) {
 	createModel(gl, "models/Sphere.001.js", gl.models);
 	createModel(gl, "models/Sphere.002.js", gl.models);
 	createModel(gl, "models/Sphere.003.js", gl.models);
+	createModel(gl, "models/Cube.001_0.js", gl.models);
+	createModel(gl, "models/Cube.001_1.js", gl.models);
+	createModel(gl, "models/Cube.001_2.js", gl.models);
+	createModel(gl, "models/Cube.002_0.js", gl.models);
+	createModel(gl, "models/Cube.002_1.js", gl.models);
+	createModel(gl, "models/Cube.002_2.js", gl.models);
+	createModel(gl, "models/Plane_0.js", gl.models);
+	createModel(gl, "models/Plane_1.js", gl.models);
 }
 
 function tick(gl, timing) {
@@ -109,7 +117,10 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	}
 	
 	//Bind Uniforms
-	gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.0);
+	if(count > 1)
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.9);
+	else
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.0);
 	gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], 0.0);
 	
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
@@ -121,9 +132,14 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aTextureCoord"], 2, gl.FLOAT, false, 0, 0);
 		
+		gl.uniform1i(gl.shaderProg.uniforms["uUseTexture"], true);
+		
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, gl.textures[model.textureIndex]);
 		gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
+	} else {
+		gl.uniform1i(gl.shaderProg.uniforms["uUseTexture"], false);
+		gl.uniform3fv(gl.shaderProg.uniforms["uDiffuseColor"], model.diffuseColor);
 	}
 	
 	gl.drawArrays(gl.TRIANGLES, 0, model.faceCount);
