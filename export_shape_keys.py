@@ -4,22 +4,22 @@ def getTextureCoords(texture, fIndex, vInFIndex):
     u = texture.data[fIndex].uv[vInFIndex][0]
     v = texture.data[fIndex].uv[vInFIndex][1]
     
-    return str(u) + ", " + str(v)
+    return str(u) + "," + str(v)
 
 def getTextureCoordsByVertex(mesh, texture, vIndex):
 	for fIndex, f in enumerate(mesh.tessfaces):
 		for vInFIndex, vIndexValue in enumerate(f.vertices):
 			if vIndexValue == vIndex:
 				return getTextureCoords(texture, fIndex, vInFIndex)
-	return "0.0, 0.0";
+	return "0.0,0.0";
 
 def vertexToStr(v):
     ret = str(round(v.co.x, 6))
-    ret += ", " + str(round(v.co.y, 6))
-    ret += ", " + str(round(v.co.z, 6))
-    ret += ", " + str(round(v.normal.x, 6))
-    ret += ", " + str(round(v.normal.y, 6))
-    ret += ", " + str(round(v.normal.z, 6))
+    ret += "," + str(round(v.co.y, 6))
+    ret += "," + str(round(v.co.z, 6))
+    ret += "," + str(round(v.normal.x, 6))
+    ret += "," + str(round(v.normal.y, 6))
+    ret += "," + str(round(v.normal.z, 6))
     return ret
 
 
@@ -35,14 +35,16 @@ outputTemplate = """\
     ]
 }"""
 
-OUTPUT_DIRECTORY = "/home/anton/Desktop/"
+OUTPUT_DIRECTORY = "/home/anton/Desktop/test/"
 
 scene = bpy.context.scene
 
 for object in bpy.data.objects:
     if object.type == 'MESH' and object.data.shape_keys is not None:
         
-        mesh = object.to_mesh(scene, True, 'RENDER')    
+        mesh = object.to_mesh(scene, True, 'RENDER')
+        
+        mesh.transform(object.matrix_world)
         
         textureCoords = "[ "
         
@@ -56,16 +58,16 @@ for object in bpy.data.objects:
                 for vInFIndex, vIndex in enumerate(f.vertices):
                     allTextureCoords.append(getTextureCoords(mainTexture, fIndex, vInFIndex))
                 
-                textureStr = allTextureCoords[0] + ", " + allTextureCoords[1] + ", " + allTextureCoords[2]
+                textureStr = allTextureCoords[0] + "," + allTextureCoords[1] + "," + allTextureCoords[2]
                 
                 if len(f.vertices) == 4:
-                    textureStr += ", " + allTextureCoords[0] + ", " + allTextureCoords[2] + ", " + allTextureCoords[3]
+                    textureStr += "," + allTextureCoords[0] + "," + allTextureCoords[2] + "," + allTextureCoords[3]
                 
                 if firstValue:
                     textureCoords += textureStr
                     firstValue = False
                 else:
-                    textureCoords += ", " + textureStr
+                    textureCoords += "," + textureStr
         
         textureCoords += " ]"
         
@@ -109,19 +111,21 @@ for object in bpy.data.objects:
 
             mesh = object.to_mesh(scene, True, 'RENDER')
             
+            mesh.transform(object.matrix_world)
+            
             for fIndex, f in enumerate(mesh.tessfaces):
                 allVertices = []
                 for vInFIndex, vIndex in enumerate(f.vertices):
                     v = mesh.vertices[vIndex]
                     allVertices.append(vertexToStr(v))
                     
-                allVertexText = allVertices[0] + ", " + allVertices[1] + ", " + allVertices[2]
+                allVertexText = allVertices[0] + "," + allVertices[1] + "," + allVertices[2]
                 
                 if firstShapeKey:
                     faceCount += 3
                 
                 if len(f.vertices) == 4:
-                    allVertexText += ", " + allVertices[0] + ", " + allVertices[2] + ", " + allVertices[3]
+                    allVertexText += "," + allVertices[0] + "," + allVertices[2] + "," + allVertices[3]
                     
                     if firstShapeKey:
                         faceCount += 3
@@ -130,7 +134,7 @@ for object in bpy.data.objects:
                     vertices += allVertexText
                     firstValue = False
                 else:
-                    vertices += ", " + allVertexText
+                    vertices += "," + allVertexText
 
             block.value = 0.0
         

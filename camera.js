@@ -1,7 +1,7 @@
 Camera = function() {   
 	this.cameraMatrix = mat4.create(); 
 	this.lookAtPoint = [0.0, 0.0, 0.0];
-	this.distance = 3.0;
+	this.distance = 16.0;
 	this.turnX = 0;
 	this.turnY = 0;
 	this.move = 0;

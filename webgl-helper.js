@@ -114,6 +114,41 @@ function createTexture(gl, url) {
 	return texture;
 }
 
+function createModel(gl, url, models) {
+	var xmlhttp = new XMLHttpRequest();
+
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState==4 && xmlhttp.status==200)
+		{
+			var modelJSON = JSON.parse(xmlhttp.responseText);
+	
+			var model = {};
+			
+			model.faceCount = modelJSON.faceCount;
+			model.relativeKeys = modelJSON.relativeKeys;
+			
+			//Each shape key has both the vertices and the vertex normals
+			model.shapeKeyBuffers = [];
+
+			for(i = 0; i < model.relativeKeys.length; i++) {
+				model.shapeKeyBuffers[i] = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, model.shapeKeyBuffers[i]);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelJSON.shapeKeys[i]), gl.STATIC_DRAW);
+			}
+			
+			if(modelJSON.textureCoords.length > 0) {
+				model.textureBuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelJSON.textureCoords), gl.STATIC_DRAW);
+			}
+			
+			models.push(model);
+		}
+	};
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+
 function startAnimation(gl, callback) {
 	//Set up the timing information
     var fps = 0;

@@ -53,23 +53,12 @@ function initTextures(gl) {
 }
 
 function initBuffers(gl) {
-	var cube = JSON.parse(syncGET("models/main.js"));
-	
-	gl.faceCount = cube.faceCount;
-	
-	//gl.vertBuffer has both the vertices and the vertex normals
-	gl.shapeKeyBuffers = [];
-
-	for(i = 0; i < 2; i++) {
-		gl.shapeKeyBuffers[i] = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, gl.shapeKeyBuffers[i]);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.shapeKeys[i]), gl.STATIC_DRAW);
-	}
-	
-	//Texture buffers
-	gl.mainTextureBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, gl.mainTextureBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.textureCoords), gl.STATIC_DRAW);
+	gl.models = [];
+	createModel(gl, "models/main.js", gl.models);
+	createModel(gl, "models/Sphere.000.js", gl.models);
+	createModel(gl, "models/Sphere.001.js", gl.models);
+	createModel(gl, "models/Sphere.002.js", gl.models);
+	createModel(gl, "models/Sphere.003.js", gl.models);
 }
 
 function tick(gl, timing) {
@@ -88,7 +77,7 @@ function draw(gl, timing) {
 
 	mat4.identity(mvMatrix);
 	mat4.rotateX(mvMatrix, degToRadian(-90));
-	mat4.translate(mvMatrix, [0.0, 0.0, -1.05]);
+	mat4.translate(mvMatrix, [0.0, 0.0, 1.25]);
 	
 	gl.camera.update(timing);
 	var cMatrix = gl.camera.getViewMatrix();
@@ -98,57 +87,45 @@ function draw(gl, timing) {
 	mat4.toInverseMat3(mvMatrix, nMatrix);
 	mat3.transpose(nMatrix);
 	
-	gl.bindBuffer(gl.ARRAY_BUFFER, gl.mainTextureBuffer);
-	gl.vertexAttribPointer(gl.shaderProg.attributes["aTextureCoord"], 2, gl.FLOAT, false, 0, 0);
+	//I'm using a while loop here instead of a for loop, because 
+	//when I use a for loop the browser will freeze up. I'm not sure
+	//is causing this, but everything works fine with a while loop.
+	var i = 0;
+	while(i < gl.models.length) {
+		drawModel(gl, timing, gl.models[i], mvMatrix, nMatrix);
+		i++;
+	}
+}
+
+function drawModel(gl, timing, model, mvMatrix, nMatrix) {
+	//Bind attributes
+	if(model.textureBuffer) { 
+		gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
+		gl.vertexAttribPointer(gl.shaderProg.attributes["aTextureCoord"], 2, gl.FLOAT, false, 0, 0);
+	}
 	
-	//Bind attributes and uniforms 
-	for(i = 0; i < 2; i++) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, gl.shapeKeyBuffers[i]);
+	var count = Math.min(model.relativeKeys.length, 2);	//We can blend together at most 2 shape keys
+	
+	for(i = 0; i < count; i++) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, model.shapeKeyBuffers[i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aPosition"+i], 3, gl.FLOAT, false, 24, 0);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
 	}
 	
-	//Blink
-	if(timing.currentTime < blinkEnd) {
-		var blinkWeight = (blinkEnd-timing.currentTime)/350.0;
-		
-		if(blinkWeight > 1.0) {
-			blinkWeight = 2.0 - blinkWeight;
-		}
-		
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], blinkWeight);
-	}
-	
-	//Puff Cheeks
-	if(timing.currentTime < puffEnd) {
-		var puffWeight = (puffEnd-timing.currentTime)/500.0;
-		
-		if(puffWeight > 1.0) {
-			puffWeight = 2.0 - puffWeight;
-		}
-		
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], puffWeight);
-	}
+	//Bind Uniforms
+	gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.7);
+	gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], 0.0);
 	
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uMVMatrix"], false, mvMatrix);
 	gl.uniformMatrix3fv(gl.shaderProg.uniforms["uNMatrix"], false, nMatrix);
 	
+	//Textures
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, gl.mainTexture);
 	gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
 	
-	gl.drawArrays(gl.TRIANGLES, 0, gl.faceCount);
-}
-
-var blinkEnd = new Date().getTime();
-function blinkClicked() {
-	blinkEnd = new Date().getTime()+700;
-}
-
-var puffEnd = new Date().getTime();
-function puffClicked() {
-	puffEnd = new Date().getTime()+1000;
+	gl.drawArrays(gl.TRIANGLES, 0, model.faceCount);
 }
 
 </script>
