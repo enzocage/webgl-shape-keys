@@ -81,7 +81,7 @@ function draw(gl, timing) {
 	
 	//I'm using a while loop here instead of a for loop, because 
 	//when I use a for loop the browser will freeze up. I'm not sure
-	//is causing this, but everything works fine with a while loop.
+	//what is causing this, but everything works fine with a while loop.
 	var i = 0;
 	while(i < gl.models.length) {
 		drawModel(gl, timing, gl.models[i], mvMatrix, nMatrix);

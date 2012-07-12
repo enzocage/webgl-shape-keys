@@ -23,6 +23,157 @@ def vertexToStr(v):
     ret += "," + str(round(v.normal.z, 6))
     return ret
 
+def getTextureStrs(mesh):
+    #Just assume there one texture file and use the first one we find
+    materialIndex = mesh.tessfaces[0].material_index
+    filePath = mesh.materials[materialIndex].active_texture.image.filepath
+    filePath = bpy.path.abspath(filePath)
+    textureFile = '"' + os.path.basename(filePath) + '"'
+    
+    
+    textureCoords = "[ "
+    
+    firstValue = True
+    
+    mainTexture = mesh.tessface_uv_textures.active
+    
+    for fIndex, f in enumerate(mesh.tessfaces):
+        allTextureCoords = []
+        for vInFIndex, vIndex in enumerate(f.vertices):
+            allTextureCoords.append(getTextureCoords(mainTexture, fIndex, vInFIndex))
+        
+        textureStr = allTextureCoords[0] + "," + allTextureCoords[1] + "," + allTextureCoords[2]
+        
+        if len(f.vertices) == 4:
+            textureStr += "," + allTextureCoords[0] + "," + allTextureCoords[2] + "," + allTextureCoords[3]
+        
+        if firstValue:
+            textureCoords += textureStr
+            firstValue = False
+        else:
+            textureCoords += "," + textureStr
+    
+    textureCoords += " ]"
+    
+    
+    return textureFile, textureCoords
+
+def getRelativeKeysStr(object):
+    shapeKeyNameToIndex = {}
+
+    for blockIndex, block in enumerate(object.data.shape_keys.key_blocks):
+        if blockIndex != 0 :
+            block.value = 0.0
+        shapeKeyNameToIndex[block.name] = blockIndex
+
+    relativeKeys = "[ "
+    
+    firstValue = True
+    
+    for block in object.data.shape_keys.key_blocks:
+        relativeKey = str(shapeKeyNameToIndex[block.relative_key.name])
+        
+        if firstValue:
+            relativeKeys += relativeKey
+            firstValue = False
+        else:
+            relativeKeys += ", " + relativeKey
+    
+    relativeKeys += " ]"
+    
+    return relativeKeys
+
+def getFaceCountAndVertices(mesh, matIndex):
+    faceCount = 0
+    
+    firstValue = True
+    
+    vertices = "[ "
+    
+    for fIndex, f in enumerate(mesh.tessfaces):
+        if matIndex != -1 and f.material_index != matIndex:
+            continue
+        
+        allVertices = []
+        for vInFIndex, vIndex in enumerate(f.vertices):
+            v = mesh.vertices[vIndex]
+            allVertices.append(vertexToStr(v))
+            
+        allVertexText = allVertices[0] + "," + allVertices[1] + "," + allVertices[2]
+        
+        faceCount += 3
+        
+        if len(f.vertices) == 4:
+            allVertexText += "," + allVertices[0] + "," + allVertices[2] + "," + allVertices[3]
+            
+            faceCount += 3
+        
+        if firstValue:
+            vertices += allVertexText
+            firstValue = False
+        else:
+            vertices += "," + allVertexText
+            
+    vertices += " ]"
+    
+    return faceCount, vertices
+
+def getShapeKeysStrs(object, mesh, hasShapeKeys, matIndex=-1):
+    faceCount = 0
+        
+    shapeKeysText = ""
+    
+    if hasShapeKeys == False:
+        mesh = object.to_mesh(scene, True, 'RENDER')
+        
+        mesh.transform(object.matrix_world)
+        
+        faceCount, shapeKeysText = getFaceCountAndVertices(mesh, matIndex)
+        
+        return faceCount, shapeKeysText
+    
+    
+    firstShapeKey = True
+    
+    for blockIndex, block in enumerate(object.data.shape_keys.key_blocks):
+        
+        block.value = 1.0
+
+        mesh = object.to_mesh(scene, True, 'RENDER')
+        
+        mesh.transform(object.matrix_world)
+        
+        faceCount, vertices = getFaceCountAndVertices(mesh, matIndex)
+
+        block.value = 0.0
+        
+        
+        if firstShapeKey:
+            shapeKeysText += vertices
+            firstShapeKey = False
+        else:
+            shapeKeysText += ",\n\t\t" + vertices
+    
+    return faceCount, shapeKeysText
+
+def writeFile(object, faceCount, textureFile, textureCoords, diffuseColor, relativeKeys, shapeKeysText, optStr=""):
+    #Generate Final Output Text    
+    parameters = {
+        "faceCount" : str(faceCount),
+        "textureFile" : textureFile,
+        "textureCoords" : textureCoords,
+        "diffuseColor" : diffuseColor,
+        "relativeKeys": relativeKeys,
+        "shapeKeys" : shapeKeysText
+    }
+    
+    outputText = outputTemplate % parameters
+    
+    out = open(OUTPUT_DIRECTORY + object.name + optStr + ".js", "w")
+    out.write(outputText)
+    out.close()
+
+
 
 # Main Code 
 
@@ -31,6 +182,7 @@ outputTemplate = """\
     "faceCount" : %(faceCount)s,
     "textureFile" : %(textureFile)s,
     "textureCoords" : %(textureCoords)s,
+    "diffuseColor" : %(diffuseColor)s,
     "relativeKeys" : %(relativeKeys)s,
     "shapeKeys"  : [
         %(shapeKeys)s
@@ -42,133 +194,46 @@ OUTPUT_DIRECTORY = "/home/anton/Desktop/test/"
 scene = bpy.context.scene
 
 for object in bpy.data.objects:
-    if object.type == 'MESH' and object.data.shape_keys is not None:
+    if object.type == 'MESH':
+        
+        hasShapeKeys = object.data.shape_keys is not None
         
         mesh = object.to_mesh(scene, True, 'RENDER')
         
         mesh.transform(object.matrix_world)
         
+        relativeKeys = "[ 0 ]"
+        if hasShapeKeys:
+            relativeKeys = getRelativeKeysStr(object)
+        
         textureFile = "\"\""
+        textureCoords = "[ ]"
         
-        textureCoords = "[ "
-        
-        firstValue = True
+        diffuseColor = "[ ]"
         
         if(len(mesh.tessface_uv_textures) > 0):
-            #Just assume there one texture file and use the first one we find
-            materialIndex = mesh.tessfaces[0].material_index
-            filePath = mesh.materials[materialIndex].active_texture.image.filepath
-            filePath = bpy.path.abspath(filePath)
-            textureFile = '"' + os.path.basename(filePath) + '"'
+            textureFile, textureCoords = getTextureStrs(mesh)
+        
+            faceCount, shapeKeysText = getShapeKeysStrs(object, mesh, hasShapeKeys)
             
-            mainTexture = mesh.tessface_uv_textures.active
+            writeFile(object, faceCount, textureFile, textureCoords, diffuseColor, relativeKeys, shapeKeysText)
+        else:
+            matIndices = {}
             
-            for fIndex, f in enumerate(mesh.tessfaces):
-                allTextureCoords = []
-                for vInFIndex, vIndex in enumerate(f.vertices):
-                    allTextureCoords.append(getTextureCoords(mainTexture, fIndex, vInFIndex))
+            for f in mesh.tessfaces:
+                if f.material_index not in matIndices:
+                    matIndices[f.material_index] = True
+            
+            for matIndex in matIndices:
+                color = mesh.materials[matIndex].diffuse_color
+                intensity = mesh.materials[matIndex].diffuse_intensity
                 
-                textureStr = allTextureCoords[0] + "," + allTextureCoords[1] + "," + allTextureCoords[2]
+                r = str(round(color.r * intensity, 6))
+                g = str(round(color.g * intensity, 6))
+                b = str(round(color.b * intensity, 6))
                 
-                if len(f.vertices) == 4:
-                    textureStr += "," + allTextureCoords[0] + "," + allTextureCoords[2] + "," + allTextureCoords[3]
+                diffuseColor = "[ " + r + ", " + g + ", " + b + " ]"
                 
-                if firstValue:
-                    textureCoords += textureStr
-                    firstValue = False
-                else:
-                    textureCoords += "," + textureStr
-        
-        textureCoords += " ]"
-        
-        
-        shapeKeyNameToIndex = {}
-
-        for blockIndex, block in enumerate(object.data.shape_keys.key_blocks):
-            if blockIndex != 0 :
-                block.value = 0.0
-            shapeKeyNameToIndex[block.name] = blockIndex
-
-        relativeKeys = "[ "
-        
-        firstValue = True
-        
-        for block in object.data.shape_keys.key_blocks:
-            relativeKey = str(shapeKeyNameToIndex[block.relative_key.name])
-            
-            if firstValue:
-                relativeKeys += relativeKey
-                firstValue = False
-            else:
-                relativeKeys += ", " + relativeKey
-        
-        relativeKeys += " ]"
-        
-        
-        faceCount = 0
-            
-        shapeKeysText = ""
-        
-        firstShapeKey = True
-        
-        for blockIndex, block in enumerate(object.data.shape_keys.key_blocks):
-            
-            vertices = "[ "
-        
-            firstValue = True
-            
-            block.value = 1.0
-
-            mesh = object.to_mesh(scene, True, 'RENDER')
-            
-            mesh.transform(object.matrix_world)
-            
-            for fIndex, f in enumerate(mesh.tessfaces):
-                allVertices = []
-                for vInFIndex, vIndex in enumerate(f.vertices):
-                    v = mesh.vertices[vIndex]
-                    allVertices.append(vertexToStr(v))
-                    
-                allVertexText = allVertices[0] + "," + allVertices[1] + "," + allVertices[2]
+                faceCount, shapeKeysText = getShapeKeysStrs(object, mesh, hasShapeKeys, matIndex)
                 
-                if firstShapeKey:
-                    faceCount += 3
-                
-                if len(f.vertices) == 4:
-                    allVertexText += "," + allVertices[0] + "," + allVertices[2] + "," + allVertices[3]
-                    
-                    if firstShapeKey:
-                        faceCount += 3
-                
-                if firstValue:
-                    vertices += allVertexText
-                    firstValue = False
-                else:
-                    vertices += "," + allVertexText
-
-            block.value = 0.0
-        
-            vertices += " ]"
-            
-            if firstShapeKey:
-                shapeKeysText += vertices
-                firstShapeKey = False
-            else:
-                shapeKeysText += ",\n\t\t" + vertices
-        
-                
-        
-        #Generate Final Output Text    
-        parameters = {
-            "faceCount" : str(faceCount),
-            "textureFile" : textureFile,
-            "textureCoords" : textureCoords,
-            "relativeKeys": relativeKeys,
-            "shapeKeys" : shapeKeysText
-        }
-        
-        outputText = outputTemplate % parameters
-        
-        out = open(OUTPUT_DIRECTORY + object.name + ".js", "w")
-        out.write(outputText)
-        out.close()
+                writeFile(object, faceCount, textureFile, textureCoords, diffuseColor, relativeKeys, shapeKeysText, "_"+str(matIndex))
