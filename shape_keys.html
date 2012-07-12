@@ -122,7 +122,7 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	
 	//Textures
 	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, gl.mainTexture);
+	gl.bindTexture(gl.TEXTURE_2D, gl.textures[model.textureIndex]);
 	gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
 	
 	gl.drawArrays(gl.TRIANGLES, 0, model.faceCount);

@@ -114,6 +114,11 @@ function createTexture(gl, url) {
 	return texture;
 }
 
+// createdTextures is used to keep track of what images we have already
+// made textures of. This way different models with the same image
+// will use the same texture.
+var createdTextures = {};
+
 function createModel(gl, url, models) {
 	var xmlhttp = new XMLHttpRequest();
 
@@ -137,6 +142,18 @@ function createModel(gl, url, models) {
 			}
 			
 			if(modelJSON.textureCoords.length > 0) {
+				if(!gl.textures) {
+					gl.textures = [];
+				}
+				
+				if( !(modelJSON.textureFile in createdTextures) ) {
+					var index = gl.textures.length;
+					gl.textures[index] = createTexture(gl, "images/"+modelJSON.textureFile);
+					createdTextures[modelJSON.textureFile] = index;
+				}
+				
+				model.textureIndex = createdTextures[modelJSON.textureFile];
+				
 				model.textureBuffer = gl.createBuffer();
 				gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelJSON.textureCoords), gl.STATIC_DRAW);
