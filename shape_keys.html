@@ -42,9 +42,6 @@ function initShaders(gl) {
 		var attribLoc = gl.shaderProg.attributes[a]
 		gl.enableVertexAttribArray(attribLoc);
 	}
-	
-	gl.disableVertexAttribArray(gl.shaderProg.attributes["aPosition2"]);
-	gl.disableVertexAttribArray(gl.shaderProg.attributes["aNormal2"]);
 }
 
 function initBuffers(gl) {
@@ -94,16 +91,25 @@ function draw(gl, timing) {
 
 function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	//Bind attributes
-	var count = Math.min(model.relativeKeys.length, 2);	//We can blend together at most 2 shape keys
+	var count = Math.min(model.relativeKeys.length, 3);	//We can blend together at most 3 shape keys
 	
 	for(i = 0; i < count; i++) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, model.shapeKeyBuffers[i]);
+		
+		gl.enableVertexAttribArray(gl.shaderProg.attributes["aPosition"+i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aPosition"+i], 3, gl.FLOAT, false, 24, 0);
+		
+		gl.enableVertexAttribArray(gl.shaderProg.attributes["aNormal"+i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
 	}
 	
+	for(i = count; i < 3; i++) {
+		gl.disableVertexAttribArray(gl.shaderProg.attributes["aPosition"+i]);
+		gl.disableVertexAttribArray(gl.shaderProg.attributes["aNormal"+i]);
+	}
+	
 	//Bind Uniforms
-	gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.7);
+	gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.0);
 	gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], 0.0);
 	
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
