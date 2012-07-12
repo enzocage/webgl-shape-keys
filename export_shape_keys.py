@@ -1,4 +1,5 @@
 import bpy
+import os
 
 def getTextureCoords(texture, fIndex, vInFIndex):
     u = texture.data[fIndex].uv[vInFIndex][0]
@@ -28,6 +29,7 @@ def vertexToStr(v):
 outputTemplate = """\
 {
     "faceCount" : %(faceCount)s,
+    "textureFile" : %(textureFile)s,
     "textureCoords" : %(textureCoords)s,
     "relativeKeys" : %(relativeKeys)s,
     "shapeKeys"  : [
@@ -46,11 +48,19 @@ for object in bpy.data.objects:
         
         mesh.transform(object.matrix_world)
         
+        textureFile = "\"\""
+        
         textureCoords = "[ "
         
         firstValue = True
         
         if(len(mesh.tessface_uv_textures) > 0):
+            #Just assume there one texture file and use the first one we find
+            materialIndex = mesh.tessfaces[0].material_index
+            filePath = mesh.materials[materialIndex].active_texture.image.filepath
+            filePath = bpy.path.abspath(filePath)
+            textureFile = '"' + os.path.basename(filePath) + '"'
+            
             mainTexture = mesh.tessface_uv_textures.active
             
             for fIndex, f in enumerate(mesh.tessfaces):
@@ -151,6 +161,7 @@ for object in bpy.data.objects:
         #Generate Final Output Text    
         parameters = {
             "faceCount" : str(faceCount),
+            "textureFile" : textureFile,
             "textureCoords" : textureCoords,
             "relativeKeys": relativeKeys,
             "shapeKeys" : shapeKeysText
