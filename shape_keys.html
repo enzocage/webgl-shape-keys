@@ -118,7 +118,7 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	
 	//Bind Uniforms
 	if(count > 1)
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.9);
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.7);
 	else
 		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.0);
 	gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], 0.0);
