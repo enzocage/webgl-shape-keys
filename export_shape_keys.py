@@ -1,11 +1,14 @@
 import bpy
 import os
 
+OUTPUT_DIRECTORY = "***CHANGE THIS!***"
+PRECISION = 6
+
 def getTextureCoords(texture, fIndex, vInFIndex):
     u = texture.data[fIndex].uv[vInFIndex][0]
     v = texture.data[fIndex].uv[vInFIndex][1]
     
-    return str(u) + "," + str(v)
+    return str(round(u, PRECISION)) + "," + str(round(v, PRECISION))
 
 def getTextureCoordsByVertex(mesh, texture, vIndex):
 	for fIndex, f in enumerate(mesh.tessfaces):
@@ -15,12 +18,12 @@ def getTextureCoordsByVertex(mesh, texture, vIndex):
 	return "0.0,0.0";
 
 def vertexToStr(v):
-    ret = str(round(v.co.x, 6))
-    ret += "," + str(round(v.co.y, 6))
-    ret += "," + str(round(v.co.z, 6))
-    ret += "," + str(round(v.normal.x, 6))
-    ret += "," + str(round(v.normal.y, 6))
-    ret += "," + str(round(v.normal.z, 6))
+    ret = str(round(v.co.x, PRECISION))
+    ret += "," + str(round(v.co.y, PRECISION))
+    ret += "," + str(round(v.co.z, PRECISION))
+    ret += "," + str(round(v.normal.x, PRECISION))
+    ret += "," + str(round(v.normal.y, PRECISION))
+    ret += "," + str(round(v.normal.z, PRECISION))
     return ret
 
 def getTextureStrs(mesh):
@@ -189,8 +192,6 @@ outputTemplate = """\
     ]
 }"""
 
-OUTPUT_DIRECTORY = "/home/anton/Desktop/test/"
-
 scene = bpy.context.scene
 
 for object in bpy.data.objects:
@@ -228,9 +229,9 @@ for object in bpy.data.objects:
                 color = mesh.materials[matIndex].diffuse_color
                 intensity = mesh.materials[matIndex].diffuse_intensity
                 
-                r = str(round(color.r * intensity, 6))
-                g = str(round(color.g * intensity, 6))
-                b = str(round(color.b * intensity, 6))
+                r = str(round(color.r * intensity, 8))
+                g = str(round(color.g * intensity, 8))
+                b = str(round(color.b * intensity, 8))
                 
                 diffuseColor = "[ " + r + ", " + g + ", " + b + " ]"
                 
