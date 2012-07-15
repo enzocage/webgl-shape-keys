@@ -32,8 +32,8 @@ function startPage() {
 }
 
 function initShaders(gl) {
-	attributeNames = ["aTextureCoord","aPosition0", "aNormal0", "aPosition1", "aNormal1", "aPosition2", "aNormal2" ];
-	uniformNames = ["uWeight1", "uWeight2","uMVMatrix", "uPMatrix", "uNMatrix", "uDiffuseColor", "uUseTexture", "uSampler"];
+	attributeNames = ["aTextureCoord","aPosition0", "aNormal0", "aPosition1", "aNormal1", "aPosition2", "aNormal2", "aPosition3", "aNormal3", "aPosition4", "aNormal4", "aPosition5", "aNormal5" ];
+	uniformNames = ["uWeight1", "uWeight2", "uWeight3", "uWeight4", "uWeight5","uMVMatrix", "uPMatrix", "uNMatrix", "uDiffuseColor", "uUseTexture", "uSampler"];
 	
 	gl.shaderProg = createShaderProgram(gl, "shape_keys.vert", "shape_keys.frag", attributeNames, uniformNames);
 	
@@ -104,31 +104,33 @@ function draw(gl, timing) {
 }
 
 function drawModel(gl, timing, model, mvMatrix, nMatrix) {
-	//Bind attributes
-	var count = Math.min(model.relativeKeys.length, 3);	//We can blend together at most 3 shape keys
+	//Correctly enable/disable the shape keys in the shaders
 	
-	for(i = 0; i < count; i++) {
-		gl.bindBuffer(gl.ARRAY_BUFFER, model.shapeKeyBuffers[i]);
+	//We can blend together at most 6 shape keys including the basis
+	var weights = getNonZeroWeights(model, 6);
+	
+	var i = 0;
+	for(shapeKeyIndex in weights) {
+		gl.bindBuffer(gl.ARRAY_BUFFER, model.shapeKeyBuffers[shapeKeyIndex]);
 		
 		gl.enableVertexAttribArray(gl.shaderProg.attributes["aPosition"+i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aPosition"+i], 3, gl.FLOAT, false, 24, 0);
 		
 		gl.enableVertexAttribArray(gl.shaderProg.attributes["aNormal"+i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
+		
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight"+i], weights[shapeKeyIndex]);
+		
+		i++;
 	}
-	for(i = count; i < 3; i++) {
+	for(i; i < 6; i++) {
 		gl.disableVertexAttribArray(gl.shaderProg.attributes["aPosition"+i]);
 		gl.disableVertexAttribArray(gl.shaderProg.attributes["aNormal"+i]);
-	}
-	
-	//Bind Uniforms
-	for(i = 1; i < count; i++) {
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight"+i], model.weights[i]);
-	}
-	for(i = count; i < 3; i++) {
+		
 		gl.uniform1f(gl.shaderProg.uniforms["uWeight"+i], 0.0);
 	}
 	
+	//Matrix Uniforms
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uMVMatrix"], false, mvMatrix);
 	gl.uniformMatrix3fv(gl.shaderProg.uniforms["uNMatrix"], false, nMatrix);
@@ -149,6 +151,18 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	}
 	
 	gl.drawArrays(gl.TRIANGLES, 0, model.faceCount);
+}
+
+function getNonZeroWeights(model, maxNumWeights) {
+	weights = { 0: 0.0 };
+	for(i = 1; i < model.weights.length; i++) {
+		if(weights.length == maxNumWeights)
+			break;
+		//If the weight begins with 0.00 we consider it to be zero.
+		if(Math.floor(model.weights[i]*100) != 0)
+			weights[i] = model.weights[i];
+	}
+	return weights;
 }
 
 </script>
