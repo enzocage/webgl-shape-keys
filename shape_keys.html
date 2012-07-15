@@ -8,6 +8,7 @@
 <script type="text/javascript" src="./other/webgl-utils.js"></script>
 <script type="text/javascript" src="./webgl-helper.js"></script>
 <script type="text/javascript" src="./camera.js"></script>
+<script type="text/javascript" src="./animation.js"></script>
 
 <script type="text/javascript">
 
@@ -45,12 +46,12 @@ function initShaders(gl) {
 }
 
 function initBuffers(gl) {
-	gl.models = [];
+	gl.models = {};
 	createModel(gl, "models/Face.js", gl.models);
-	createModel(gl, "models/EyeLid.000.js", gl.models);
-	createModel(gl, "models/EyeLid.001.js", gl.models);
-	createModel(gl, "models/EyeLid.002.js", gl.models);
-	createModel(gl, "models/EyeLid.003.js", gl.models);
+	createModel(gl, "models/EyeLid.000.js", gl.models, [0.0, 1.0]);
+	createModel(gl, "models/EyeLid.001.js", gl.models, [0.0, 1.0]);
+	createModel(gl, "models/EyeLid.002.js", gl.models, [0.0, 1.0]);
+	createModel(gl, "models/EyeLid.003.js", gl.models, [0.0, 1.0]);
 	createModel(gl, "models/Eye.001_0.js", gl.models);
 	createModel(gl, "models/Eye.001_1.js", gl.models);
 	createModel(gl, "models/Eye.001_2.js", gl.models);
@@ -62,6 +63,7 @@ function initBuffers(gl) {
 }
 
 function tick(gl, timing) {
+	animate(gl, timing);
 	draw(gl, timing);
 	
 	var fpsDiv = document.getElementById("fps");
@@ -90,9 +92,13 @@ function draw(gl, timing) {
 	//I'm using a while loop here instead of a for loop, because 
 	//when I use a for loop the browser will freeze up. I'm not sure
 	//what is causing this, but everything works fine with a while loop.
+	var names = [];
+	for(name in gl.models)
+		names.push(name);
+	
 	var i = 0;
-	while(i < gl.models.length) {
-		drawModel(gl, timing, gl.models[i], mvMatrix, nMatrix);
+	while(i < names.length) {
+		drawModel(gl, timing, gl.models[names[i]], mvMatrix, nMatrix);
 		i++;
 	}
 }
@@ -110,18 +116,18 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 		gl.enableVertexAttribArray(gl.shaderProg.attributes["aNormal"+i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
 	}
-	
 	for(i = count; i < 3; i++) {
 		gl.disableVertexAttribArray(gl.shaderProg.attributes["aPosition"+i]);
 		gl.disableVertexAttribArray(gl.shaderProg.attributes["aNormal"+i]);
 	}
 	
 	//Bind Uniforms
-	if(count > 1)
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.7);
-	else
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight1"], 0.0);
-	gl.uniform1f(gl.shaderProg.uniforms["uWeight2"], 0.0);
+	for(i = 1; i < count; i++) {
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight"+i], model.weights[i]);
+	}
+	for(i = count; i < 3; i++) {
+		gl.uniform1f(gl.shaderProg.uniforms["uWeight"+i], 0.0);
+	}
 	
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uPMatrix"], false, gl.pMatrix);
 	gl.uniformMatrix4fv(gl.shaderProg.uniforms["uMVMatrix"], false, mvMatrix);
@@ -154,7 +160,11 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	<div>
 		<span>FPS: </span><span id="fps"></span>
 		<button onClick="blinkClicked();">Blink!</button>
+		<button onClick="happyClicked();">Happy!</button>
+		<button onClick="angryClicked();">Angry!</button>
+		<button onClick="sadClicked();">Sad!</button>
 		<button onClick="puffClicked();">Puff Cheeks!</button>
+		<button onClick="kissClicked();">Kiss!</button>
 	</div>
 </body>
 

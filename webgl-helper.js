@@ -119,7 +119,7 @@ function createTexture(gl, url) {
 // will use the same texture.
 var createdTextures = {};
 
-function createModel(gl, url, models) {
+function createModel(gl, url, models, optWeights) {
 	var xmlhttp = new XMLHttpRequest();
 
 	xmlhttp.onreadystatechange = function() {
@@ -131,6 +131,15 @@ function createModel(gl, url, models) {
 			
 			model.faceCount = modelJSON.faceCount;
 			model.relativeKeys = modelJSON.relativeKeys;
+			
+			//Initialize weights values for the shape keys
+			if(typeof optWeights === "undefined") {
+				model.weights = []
+				for(i = 0; i < model.relativeKeys.length; i++)
+					model.weights.push(0.0);
+			} else {
+				model.weights = optWeights;
+			}
 			
 			//Each shape key has both the vertices and the vertex normals
 			model.shapeKeyBuffers = [];
@@ -161,7 +170,8 @@ function createModel(gl, url, models) {
 				model.diffuseColor = modelJSON.diffuseColor;
 			}
 			
-			models.push(model);
+			var name = url.replace(/^.*[\\\/]/, '');
+			models[name] = model;
 		}
 	};
 	xmlhttp.open("GET", url, true);
