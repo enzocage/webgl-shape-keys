@@ -64,7 +64,7 @@ function animate(gl, timing) {
 		gl.models["Face.js"].weights[4] = weight;
 		gl.models["Face.js"].weights[5] = weight;
 		gl.models["Face.js"].weights[10] = 0.6*weight;
-		gl.models["Face.js"].weights[14] = weight;
+		gl.models["Face.js"].weights[1] = weight;
 		
 		for(i = 0; i < 4; i++)
 			gl.models["EyeLid.00"+i+".js"].weights[1] = weightEyes;
@@ -79,7 +79,7 @@ function animate(gl, timing) {
 		gl.models["Face.js"].weights[9] = weight;
 		gl.models["Face.js"].weights[10] = 0.4*weight;
 		gl.models["Face.js"].weights[13] = weight;
-		gl.models["Face.js"].weights[14] = weight;
+		gl.models["Face.js"].weights[1] = weight;
 	}
 	
 	//Puff Cheeks
