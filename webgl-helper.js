@@ -3,8 +3,8 @@ function initGL (canvas) {
 	
 	try {
 		gl = WebGLUtils.create3DContext(canvas);
-		gl.viewportWidth = canvas.offsetWidth;
-		gl.viewportHeight = canvas.offsetWidth;
+		gl.viewportWidth = canvas.width;
+		gl.viewportHeight = canvas.height;
 	} catch (e) { }
 	
 	if (!gl) {
@@ -140,6 +140,7 @@ function createModel(gl, url, models, optWeights) {
 			} else {
 				model.weights = optWeights;
 			}
+			model.defaultWeights = model.weights.slice();
 			
 			//Each shape key has both the vertices and the vertex normals
 			model.shapeKeyBuffers = [];

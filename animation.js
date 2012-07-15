@@ -25,6 +25,11 @@ function getWeightWithPause(t) {
 }
 
 function animate(gl, timing) {
+	//Reset all weights
+	for(mIndex in gl.models)
+		for(wIndex in gl.models[mIndex].weights)
+			gl.models[mIndex].weights[wIndex] = gl.models[mIndex].defaultWeights[wIndex];
+	
 	//Blink
 	if(timing.currentTime < blinkEnd) {
 		var weight = (blinkEnd-timing.currentTime)/900.0;
@@ -67,7 +72,7 @@ function animate(gl, timing) {
 	
 	//Sad
 	if(timing.currentTime < sadEnd) {
-		var weight = (sadEnd-timing.currentTime)/2000.0;
+		var weight = (sadEnd-timing.currentTime)/2400.0;
 		weight = getWeightWithPause(weight);
 
 		gl.models["Face.js"].weights[8] = weight;
@@ -101,25 +106,41 @@ function animate(gl, timing) {
 
 var blinkEnd = new Date().getTime();
 function blinkClicked() {
+	resetTime();
 	blinkEnd = new Date().getTime()+900;
 }
 var happyEnd = new Date().getTime();
 function happyClicked() {
+	resetTime();
 	happyEnd = new Date().getTime()+2000;
 }
 var angryEnd = new Date().getTime();
 function angryClicked() {
+	resetTime();
 	angryEnd = new Date().getTime()+2000;
 }
 var sadEnd = new Date().getTime();
 function sadClicked() {
-	sadEnd = new Date().getTime()+2000;
+	resetTime();
+	sadEnd = new Date().getTime()+2400;
 }
 var puffEnd = new Date().getTime();
 function puffClicked() {
+	resetTime();
 	puffEnd = new Date().getTime()+1300;
 }
 var kissEnd = new Date().getTime();
 function kissClicked() {
+	resetTime();
 	kissEnd = new Date().getTime()+1300;
+}
+
+function resetTime() {
+	curTime = new Date().getTime();
+	blinkEnd = curTime - 1000;
+	happyEnd = curTime - 1000;
+	angryEnd = curTime - 1000;
+	sadEnd = curTime - 1000;
+	puffEnd = curTime - 1000;
+	kissEnd = curTime - 1000;
 }

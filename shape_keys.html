@@ -14,6 +14,8 @@
 
 function startPage() {
 	var canvas = document.getElementById("main-canvas");
+	canvas.height = window.innerHeight - 40;
+	canvas.width = window.innerWidth - 205;
 	var gl = initGL(canvas);
 	
 	initShaders(gl);
@@ -79,7 +81,7 @@ function draw(gl, timing) {
 
 	mat4.identity(mvMatrix);
 	mat4.rotateX(mvMatrix, degToRadian(-90));
-	mat4.translate(mvMatrix, [0.0, 0.0, 1.25]);
+	mat4.translate(mvMatrix, [0.0, 0.0, 3.0]);
 	
 	gl.camera.update(timing);
 	var cMatrix = gl.camera.getViewMatrix();
@@ -171,18 +173,63 @@ function getNonZeroWeights(model, maxNumWeights) {
 
 </script>
 
+<link rel="stylesheet" media="all" href="buttons.min.css"/>
+
+<style type="text/css">
+body {
+	margin: 20px;
+	background: #FFF;
+}
+
+#main-canvas {
+	float: left;
+}
+
+#side {
+	width: 150px;
+	height: 100%;
+	margin-left: 15px;
+	padding: 15px;
+
+	background: rgb(233, 240, 241);
+	
+	border: 1px solid #CDEAEA;
+	border-radius:7px;
+	box-shadow: 5px 5px 5px #888888;
+	
+	box-sizing: border-box;
+	
+	float: left;
+}
+
+#fpsDiv {
+	font-family: "Lucida Grande",Arial,Verdana;
+	text-align: center;
+}
+
+.button {
+	font-weight:normal;
+	
+	width: 120px;
+	padding: 5px 0px;
+}
+</style>
+
 </head>
 
 <body onLoad="startPage();">
-	<canvas id="main-canvas" width="1024" height="768"></canvas>
-	<div>
-		<span>FPS: </span><span id="fps"></span>
-		<button onClick="happyClicked();">Happy!</button>
-		<button onClick="angryClicked();">Angry!</button>
-		<button onClick="sadClicked();">Sad!</button>
-		<button onClick="kissClicked();">Kiss!</button>
-		<button onClick="puffClicked();">Puff Cheeks!</button>
-		<button onClick="blinkClicked();">Blink!</button>
+	<canvas id="main-canvas"></canvas>
+	<div id="side">
+		<div id="fpsDiv">
+			<span>FPS: </span><span id="fps"></span>
+		</div>
+		<br/>
+		<button class="button royalblue" onClick="happyClicked();">Happy!</button><br/>
+		<button class="button royalblue" onClick="angryClicked();">Angry!</button><br/>
+		<button class="button royalblue" onClick="sadClicked();">Sad!</button><br/>
+		<button class="button royalblue" onClick="kissClicked();">Kiss!</button><br/>
+		<button class="button royalblue" onClick="puffClicked();">Puff Cheeks!</button><br/>
+		<button class="button royalblue" onClick="blinkClicked();">Blink!</button>
 	</div>
 </body>
 
