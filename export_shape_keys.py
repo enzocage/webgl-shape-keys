@@ -125,8 +125,8 @@ def getShapeKeysStrs(object, mesh, hasShapeKeys, matIndex=-1):
     
     if hasShapeKeys == False:
         mesh = object.to_mesh(scene, True, 'RENDER')
-        
         mesh.transform(object.matrix_world)
+        mesh.calc_normals()
         
         faceCount, shapeKeysText = getFaceCountAndVertices(mesh, matIndex)
         
@@ -140,8 +140,8 @@ def getShapeKeysStrs(object, mesh, hasShapeKeys, matIndex=-1):
         block.value = 1.0
 
         mesh = object.to_mesh(scene, True, 'RENDER')
-        
         mesh.transform(object.matrix_world)
+        mesh.calc_normals()
         
         faceCount, vertices = getFaceCountAndVertices(mesh, matIndex)
 
@@ -199,8 +199,8 @@ for object in bpy.data.objects:
         hasShapeKeys = object.data.shape_keys is not None
         
         mesh = object.to_mesh(scene, True, 'RENDER')
-        
         mesh.transform(object.matrix_world)
+        mesh.calc_normals()
         
         relativeKeys = "[ 0 ]"
         if hasShapeKeys:
