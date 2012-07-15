@@ -3,8 +3,6 @@ function initGL (canvas) {
 	
 	try {
 		gl = WebGLUtils.create3DContext(canvas);
-		gl.viewportWidth = canvas.width;
-		gl.viewportHeight = canvas.height;
 	} catch (e) { }
 	
 	if (!gl) {
@@ -53,7 +51,7 @@ function createShaderProgram (gl, vertexURL, fragURL, attributeNames, uniformNam
 	gl.linkProgram(shaderProgram);
 
 	if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-		alert("I'm sorry I could't create the shader program.");
+		alert("I'm sorry I couldn't create the shader program.");
 	}
 	
 	gl.useProgram(shaderProgram);

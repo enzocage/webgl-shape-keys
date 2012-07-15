@@ -11,11 +11,19 @@
 <script type="text/javascript" src="./animation.js"></script>
 
 <script type="text/javascript">
-
-function startPage() {
+function resizeCanvas(gl) {
 	var canvas = document.getElementById("main-canvas");
 	canvas.height = window.innerHeight - 40;
 	canvas.width = window.innerWidth - 205;
+	
+	if(!gl.pMatrix)
+		gl.pMatrix = mat4.create();
+	gl.viewport(0, 0, canvas.width, canvas.height);
+	mat4.perspective(45, canvas.width / canvas.height, 0.1, 100.0, gl.pMatrix);
+}
+
+function startPage() {	
+	var canvas = document.getElementById("main-canvas");
 	var gl = initGL(canvas);
 	
 	initShaders(gl);
@@ -23,10 +31,12 @@ function startPage() {
 	
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.enable(gl.DEPTH_TEST);
-	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 	
-	gl.pMatrix = mat4.create();
-	mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, gl.pMatrix);
+	window.onresize = function() {
+		resizeCanvas(gl);
+	};
+	
+	resizeCanvas(gl);
 	
 	gl.camera = new Camera();
 	
@@ -194,7 +204,6 @@ body {
 	background: rgb(233, 240, 241);
 	
 	border: 1px solid #CDEAEA;
-	border-radius:7px;
 	box-shadow: 5px 5px 5px #888888;
 	
 	box-sizing: border-box;
