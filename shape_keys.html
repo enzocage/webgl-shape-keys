@@ -119,7 +119,8 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 		gl.enableVertexAttribArray(gl.shaderProg.attributes["aNormal"+i]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aNormal"+i], 3, gl.FLOAT, false, 24, 12);
 		
-		gl.uniform1f(gl.shaderProg.uniforms["uWeight"+i], weights[shapeKeyIndex]);
+		if(i != 0)	//No weight for the basis
+			gl.uniform1f(gl.shaderProg.uniforms["uWeight"+i], weights[shapeKeyIndex]);
 		
 		i++;
 	}
@@ -138,6 +139,7 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 	//Textures
 	if("textureIndex" in model) { 
 		gl.bindBuffer(gl.ARRAY_BUFFER, model.textureBuffer);
+		gl.enableVertexAttribArray(gl.shaderProg.attributes["aTextureCoord"]);
 		gl.vertexAttribPointer(gl.shaderProg.attributes["aTextureCoord"], 2, gl.FLOAT, false, 0, 0);
 		
 		gl.uniform1i(gl.shaderProg.uniforms["uUseTexture"], true);
@@ -146,6 +148,8 @@ function drawModel(gl, timing, model, mvMatrix, nMatrix) {
 		gl.bindTexture(gl.TEXTURE_2D, gl.textures[model.textureIndex]);
 		gl.uniform1i(gl.shaderProg.uniforms["uSampler"], 0);
 	} else {
+		gl.disableVertexAttribArray(gl.shaderProg.attributes["aTextureCoord"]);
+		
 		gl.uniform1i(gl.shaderProg.uniforms["uUseTexture"], false);
 		gl.uniform3fv(gl.shaderProg.uniforms["uDiffuseColor"], model.diffuseColor);
 	}
