@@ -17,7 +17,7 @@ body {
 	
 	border: 1px solid #CDEAEA;
 	box-shadow: 5px 5px 5px #888888;
-	
+	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 	
 	position: relative;
@@ -54,6 +54,7 @@ em {
 	width: 100%;
 	bottom: 0;
 	
+	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 	padding: 15px;
 	
