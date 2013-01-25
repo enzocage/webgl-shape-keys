@@ -189,7 +189,9 @@ function startAnimation(gl, callback) {
     pulse();
 
     function pulse(time) {
-        requestAnimFrame(pulse);
+		time = new Date().getTime();
+        
+		requestAnimFrame(pulse);
         
         var timing = {
             fps: fps,
